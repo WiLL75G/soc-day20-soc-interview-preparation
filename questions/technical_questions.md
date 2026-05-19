@@ -1,12 +1,12 @@
 # SOC Analyst Technical Interview Questions
 
-## Analyst: James | @WilliamCyberSec | GitHub: WilL75G
+## Analyst: William | @WilliamCyberSec | GitHub: WilL75G
 
 ---
 
-## Category 1 - Networking Fundamentals
+## Category 1 --Networking Fundamentals
 
-**Q1: What is the OSI model and why does it matter to a SOC analyst?**
+**Q1: What is the OSI model and why does it matter to a SOC anyst?**
 ```
 The OSI model has 7 layers Physical, Data Link, Network,
 Transport, Session, Presentation, Application.
