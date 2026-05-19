@@ -6,15 +6,15 @@
 
 - **Resource Type:** Interview Preparation System
 - **Target Role:** SOC Analyst Tier 1 / Tier 2
-- **Resources Produced:** 2 — Technical Question Bank, Incident Response Scenarios
+- **Resources Produced:** 2 Technical Question Bank, Incident Response Scenarios
 - **Questions Covered:** 16 Technical + 5 Full Scenarios + Quick Fire Round
-- **Status:** Complete — Interview Ready
+- **Status:** Complete Interview Ready
 
 ---
 
 ## Executive Summary
 
-A comprehensive SOC analyst interview preparation system was built covering every dimension of the hiring process. A technical question bank was produced spanning networking, security fundamentals, SOC operations, tools, threat intelligence, and malware — each with full structured answers. Five realistic incident response scenarios were built with model answers and MITRE ATT&CK mappings — covering SSH brute force, phishing, ransomware, malicious PowerShell, and impossible travel. This guide is designed to take a candidate from nervous to confident in every interview format.
+A comprehensive SOC analyst interview preparation system was built covering every dimension of the hiring process. A technical question bank was produced spanning networking, security fundamentals, SOC operations, tools, threat intelligence, and malware each with full structured answers. Five realistic incident response scenarios were built with model answers and MITRE ATT&CK mappings covering SSH brute force, phishing, ransomware, malicious PowerShell, and impossible travel. This guide is designed to take a candidate from nervous to confident in every interview format.
 
 ---
 
@@ -37,9 +37,9 @@ Plus a **Quick Fire Round** — 15 definitions every analyst must know cold.
 
 #### Key Insight:
 
-- Interviewers test depth not breadth — know fewer things thoroughly rather than many things superficially
-- Every answer should connect back to the SOC analyst role — not just define the concept
-- The Quick Fire Round covers the most commonly asked 1-line questions in technical screens
+- Interviewers test depth not breadth know fewer things thoroughly rather than many things superficially
+- Every answer should connect back to the SOC analyst role not just define the concept
+- The Quick Fire Round covers the most commonly asked 1 line questions in technical screens
 
 ---
 
@@ -51,13 +51,13 @@ Plus a **Quick Fire Round** — 15 definitions every analyst must know cold.
 |---|---|---|---|
 | 1 | SSH Brute Force + Successful Login | HIGH | Triage + containment + escalation |
 | 2 | Phishing Email with Attachment | HIGH | Header analysis + scope check |
-| 3 | Ransomware — Mass File Encryption | CRITICAL | Speed + containment + IR activation |
+| 3 | Ransomware Mass File Encryption | CRITICAL | Speed + containment + IR activation |
 | 4 | Suspicious PowerShell from Word | HIGH | Malware indicators + EDR investigation |
-| 5 | Impossible Travel — Credential Compromise | HIGH | User verification + session management |
+| 5 | Impossible Travel Credential Compromise | HIGH | User verification + session management |
 
 #### Key Insight:
 
-- Scenario interviews test your thinking process — not just your answer
+- Scenario interviews test your thinking process not just your answer
 - Always state containment before investigation for CRITICAL severity alerts
 - MITRE ATT&CK mappings in your answers signal Tier 2 level thinking to interviewers
 
@@ -107,7 +107,7 @@ Prepare your STAR method answers using real lab work
 
 ## Analyst Insight
 
-Interview preparation is itself a skill. The difference between a candidate who knows the material and one who gets the offer is the ability to communicate under pressure — clearly, confidently, and in the right order. Containment before investigation. MITRE before closing. Documentation always. Practicing these scenarios out loud before the interview is what converts knowledge into performance. Your portfolio from Days 1–19 is your proof of concept — this guide is how you talk about it.
+Interview preparation is itself a skill. The difference between a candidate who knows the material and one who gets the offer is the ability to communicate under pressure clearly, confidently, and in the right order. Containment before investigation. MITRE before closing. Documentation always. Practicing these scenarios out loud before the interview is what converts knowledge into performance. Your portfolio from Days 1–19 is your proof of concept this guide is how you talk about it.
 
 ---
 
@@ -117,7 +117,7 @@ Interview preparation is itself a skill. The difference between a candidate who 
 - Walk through 5 incident response scenarios using structured analyst thinking
 - Apply the PICERL incident response framework under interview pressure
 - Map incident findings to MITRE ATT&CK in real time during a scenario
-- Know the Quick Fire Round definitions cold — no hesitation
+- Know the Quick Fire Round definitions cold no hesitation
 - Use real portfolio projects as evidence in technical and behavioural answers
 
 ---
@@ -137,4 +137,4 @@ soc-interview-prep-guide/
 
 ## Conclusion
 
-This interview prep system covers every format a SOC analyst candidate will face — technical screens, scenario panels, and behavioural rounds. With 16 technical questions, 5 full incident scenarios, and a Quick Fire Round, every dimension of the hiring process is covered. Combined with the 28-day portfolio, this guide represents a complete interview-ready package for any SOC Analyst Tier 1 or Tier 2 role.
+This interview prep system covers every format a SOC analyst candidate will face technical screens, scenario panels, and behavioural rounds. With 16 technical questions, 5 full incident scenarios, and a Quick Fire Round, every dimension of the hiring process is covered. Combined with the 28-day portfolio, this guide represents a complete interview ready package for any SOC Analyst Tier 1 or Tier 2 role.
