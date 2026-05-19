@@ -1,18 +1,18 @@
 # SOC Analyst Technical Interview Questions
 
-## Analyst: James | @WilliamCyberSec | GitHub: willcyber756
+## Analyst: James | @WilliamCyberSec | GitHub: WilL75G
 
 ---
 
-## Category 1 — Networking Fundamentals
+## Category 1 - Networking Fundamentals
 
 **Q1: What is the OSI model and why does it matter to a SOC analyst?**
 ```
-The OSI model has 7 layers — Physical, Data Link, Network,
+The OSI model has 7 layers Physical, Data Link, Network,
 Transport, Session, Presentation, Application.
 
 Why it matters to SOC:
-- Attacks happen at specific layers — knowing which layer
+- Attacks happen at specific layers knowing which layer
   helps narrow down the attack vector
 - Port scans target Layer 4 (Transport)
 - Phishing targets Layer 7 (Application)
@@ -26,9 +26,9 @@ Why it matters to SOC:
 **Q2: What is the difference between TCP and UDP?**
 ```
 TCP (Transmission Control Protocol):
-- Connection-oriented — requires handshake before data transfer
-- Reliable — guarantees delivery and order
-- Slower — overhead from acknowledgements
+- Connection-oriented requires handshake before data transfer
+- Reliable guarantees delivery and order
+- Slower overhead from acknowledgements
 - Used for: HTTP, HTTPS, SSH, FTP, SMTP
 
 UDP (User Datagram Protocol):
@@ -56,7 +56,7 @@ Step 3 — ACK: Client sends ACK
          "Connection established"
 
 SOC relevance: A SYN flood attack sends thousands of SYN
-packets without completing the handshake — consuming server
+packets without completing the handshake consuming server
 resources. This is detected in Wireshark by a high volume
 of SYN packets with no corresponding SYN-ACK responses.
 ```
@@ -65,18 +65,18 @@ of SYN packets with no corresponding SYN-ACK responses.
 
 **Q4: What ports should every SOC analyst know?**
 ```
-20/21  — FTP (file transfer — unencrypted)
+20/21  — FTP (file transfer unencrypted)
 22     — SSH (secure remote access)
-23     — Telnet (remote access — unencrypted — dangerous)
+23     — Telnet (remote access unencrypted — dangerous)
 25     — SMTP (email sending)
 53     — DNS (domain name resolution)
-80     — HTTP (web traffic — unencrypted)
+80     — HTTP (web traffic unencrypted)
 110    — POP3 (email retrieval)
 143    — IMAP (email retrieval)
 443    — HTTPS (encrypted web traffic)
-445    — SMB (Windows file sharing — WannaCry used this)
+445    — SMB (Windows file sharing WannaCry used this)
 3306   — MySQL (database)
-3389   — RDP (Windows remote desktop — brute force target)
+3389   — RDP (Windows remote desktop brute force target)
 8080   — HTTP alternate (often used by web proxies)
 ```
 
@@ -110,7 +110,7 @@ Example: Entering your username and password
 Authorisation: What you are allowed to do after proving identity
 Example: Your account can read files but not delete them
 
-SOC relevance: Many attacks exploit both — credential theft
+SOC relevance: Many attacks exploit both credential theft
 bypasses authentication, privilege escalation bypasses
 authorisation.
 ```
@@ -132,7 +132,7 @@ Example layers:
 - Human: Security awareness training
 
 SOC relevance: Understanding which layer an attack targets
-tells the analyst which controls should have caught it —
+tells the analyst which controls should have caught it
 and which ones failed.
 ```
 
@@ -154,7 +154,7 @@ EDR (Endpoint Detection and Response):
 - Examples: CrowdStrike, Carbon Black, Microsoft Defender
 - Best for: Detecting and responding to threats on endpoints
 
-A SOC uses both together — SIEM for the big picture,
+A SOC uses both together SIEM for the big picture,
 EDR for granular endpoint investigation.
 ```
 
@@ -166,10 +166,10 @@ A playbook is a documented, step-by-step procedure for
 responding to a specific type of incident.
 
 Why analysts use them:
-- Consistency — every analyst follows the same process
-- Speed — no time wasted deciding what to do next
-- Compliance — proves due process was followed
-- Training — new analysts learn from playbooks
+- Consistency every analyst follows the same process
+- Speed no time wasted deciding what to do next
+- Compliance proves due process was followed
+- Training new analysts learn from playbooks
 
 Common playbook types:
 - Phishing response playbook
@@ -189,16 +189,16 @@ Phase 2 — Identification:
 Alert fires — is this a real incident or false positive?
 
 Phase 3 — Containment:
-Stop the spread — isolate host, block IP, disable account
+Stop the spread isolate host, block IP, disable account
 
 Phase 4 — Eradication:
-Remove the threat — delete malware, patch vulnerability
+Remove the threat delete malware, patch vulnerability
 
 Phase 5 — Recovery:
-Restore systems — bring services back online safely
+Restore systems bring services back online safely
 
 Phase 6 — Lessons Learned:
-Document what happened — improve detection and response
+Document what happened improve detection and response
 
 Memory aid: PICERL
 Prepare → Identify → Contain → Eradicate → Recover → Learn
@@ -211,7 +211,7 @@ Prepare → Identify → Contain → Eradicate → Recover → Learn
 **Q11: What is Splunk and how do SOC analysts use it?**
 ```
 Splunk is a SIEM platform that ingests, indexes, and
-searches machine-generated log data from across an
+searches machine generated log data from across an
 environment.
 
 How SOC analysts use it:
@@ -221,7 +221,7 @@ How SOC analysts use it:
 - Create alert rules that fire when attack patterns are detected
 - Investigate incidents by searching historical log data
 
-Example SPL query — detect brute force:
+Example SPL query detect brute force:
 index=auth sourcetype=linux_secure
 "Failed password" | stats count by src_ip
 | where count > 10
@@ -270,13 +270,13 @@ How SOC analysts use it:
 **Q14: What is threat intelligence and why does it matter?**
 ```
 Threat intelligence is information about current and emerging
-threats — who the attackers are, what they want, and how
+threats who the attackers are, what they want, and how
 they operate.
 
 Types:
-- Strategic: High level — industry threats and trends
-- Operational: Campaign level — attacker TTPs
-- Tactical: Technical level — IOCs (IPs, domains, hashes)
+- Strategic: High level industry threats and trends
+- Operational: Campaign level attacker TTPs
+- Tactical: Technical level IOCs (IPs, domains, hashes)
 
 How SOC analysts use it:
 - Enrich alerts with context from threat intel feeds
@@ -294,11 +294,11 @@ Sources: VirusTotal, AbuseIPDB, AlienVault OTX,
 
 **Q15: What is the difference between a virus, worm, trojan, and RAT?**
 ```
-Virus: Attaches to a file — spreads when file is shared
+Virus: Attaches to a file spreads when file is shared
        Requires human action to propagate
 
 Worm: Self-replicates across networks automatically
-      No human action needed — spreads faster than viruses
+      No human action needed spreads faster than viruses
 
 Trojan: Disguised as legitimate software
         Opens a backdoor when executed
@@ -310,7 +310,7 @@ RAT (Remote Access Trojan): A trojan that gives the attacker
         Example: NetSupport Manager RAT (Day 18 PCAP)
 
 Ransomware: Encrypts files and demands payment for decryption
-        Combines trojan delivery with worm-like spreading
+        Combines trojan delivery with worm like spreading
         Example: WannaCry (used SMB port 445)
 ```
 
