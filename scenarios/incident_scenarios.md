@@ -51,7 +51,7 @@ Step 4 — Contain immediately
 
 Step 5 — Escalate to Tier 2
          → Full triage notes included
-         → Confirmed compromise — host needs forensics
+         → Confirmed compromise host needs forensics
 
 Step 6 — Document everything
          → Source IP, destination, timeline, actions taken
@@ -86,9 +86,9 @@ Severity: HIGH
 Step 1 — Do not click any links or open the attachment
 
 Step 2 — Analyse the email headers
-         → From: paypal.com — spoofed
-         → Reply-To: secure-login-verify.com — real attacker
-         → Sending IP: 45.131.214.85 — check reputation
+         → From: paypal.com spoofed
+         → Reply-To: secure-login-verify.com real attacker
+         → Sending IP: 45.131.214.85 check reputation
          → SPF/DKIM: check if present
 
 Step 3 — Investigate the IOCs
@@ -107,7 +107,7 @@ Step 5 — Contain
          → Block the sending IP
 
 Step 6 — Notify and educate
-         → Alert the recipient — do not click anything
+         → Alert the recipient do not click anything
          → Send company-wide awareness reminder
 
 Step 7 — Document and escalate if user clicked
@@ -138,12 +138,12 @@ Severity: CRITICAL
 ### Model Answer:
 
 ```
-Step 1 — This is CRITICAL — act immediately
+Step 1 — This is CRITICAL act immediately
          Do not wait. Do not investigate first. CONTAIN FIRST.
 
 Step 2 — Isolate the host immediately
          → Disconnect DESKTOP-HR-04 from the network
-         → Use EDR to isolate — do not physically unplug yet
+         → Use EDR to isolate do not physically unplug yet
          → Preserve memory state for forensics
 
 Step 3 — Block C2 communication
@@ -153,7 +153,7 @@ Step 3 — Block C2 communication
 Step 4 — Assess the scope
          → Are other hosts showing similar file activity?
          → Check SIEM for lateral movement from DESKTOP-HR-04
-         → Check SMB traffic — ransomware spreads via SMB
+         → Check SMB traffic ransomware spreads via SMB
 
 Step 5 — Escalate immediately
          → Tier 2 + Incident Response team
