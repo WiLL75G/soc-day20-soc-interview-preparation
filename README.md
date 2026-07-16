@@ -1,4 +1,4 @@
-# Day 20 – SOC Analyst Interview Prep Guide
+# SOC Analyst Interview Prep Guide
 
 ---
 
