@@ -78,12 +78,12 @@ Repeat any scenario where you scored below 4/5
 
 WEEK 3 — Mock interviews
 Ask a friend or use this guide to run mock interviews
-Practice saying answers out loud — not just reading them
+Practice saying answers out loud not just reading them
 Record yourself and review for clarity and confidence
 
-DAY BEFORE — Final review
-Quick Fire Round — know all 15 answers cold
-Review your portfolio projects — know every detail
+DAY BEFORE Final review
+Quick Fire Round know all 15 answers cold
+Review your portfolio projects know every detail
 Prepare your STAR method answers using real lab work
 ```
 
