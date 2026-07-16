@@ -26,14 +26,14 @@ A comprehensive SOC analyst interview preparation system was built covering ever
 
 16 full questions with structured answers across 6 categories:
 
-- **Category 1 — Networking:** OSI model, TCP vs UDP, 3-way handshake, common ports
-- **Category 2 — Security Fundamentals:** CIA Triad, authentication vs authorisation, defence in depth
-- **Category 3 — SOC Operations:** SIEM vs EDR, playbooks, incident response lifecycle (PICERL)
-- **Category 4 — Tools:** Splunk SPL, Wireshark investigation workflow
-- **Category 5 — Threat Intelligence:** MITRE ATT&CK, threat intel types and sources
-- **Category 6 — Malware & Attacks:** Virus vs worm vs trojan vs RAT, MITM attacks
+- **Category 1 Networking:** OSI model, TCP vs UDP, 3-way handshake, common ports
+- **Category 2 Security Fundamentals:** CIA Triad, authentication vs authorisation, defence in depth
+- **Category 3 SOC Operations:** SIEM vs EDR, playbooks, incident response lifecycle (PICERL)
+- **Category 4 Tools:** Splunk SPL, Wireshark investigation workflow
+- **Category 5 Threat Intelligence:** MITRE ATT&CK, threat intel types and sources
+- **Category 6 Malware & Attacks:** Virus vs worm vs trojan vs RAT, MITM attacks
 
-Plus a **Quick Fire Round** — 15 definitions every analyst must know cold.
+Plus a **Quick Fire Round** 15 definitions every analyst must know cold.
 
 #### Key Insight:
 
