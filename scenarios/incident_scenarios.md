@@ -1,307 +1,314 @@
 # SOC Analyst Incident Response Scenarios
 
-## How to Use This Guide
+Read each alert as if it just fired. Write your answer before reading the model. Score honestly.
 
-Read each scenario as if it is a real alert.
-Write your response before reading the answer.
-Score yourself honestly.
-These are the exact scenarios interviewers use.
+Every scenario here has one step candidates skip. It is named at the bottom of each model answer, because knowing what you would miss is worth more than knowing what you would do.
 
 ---
 
-## Scenario 1 — SSH Brute Force
+## Scenario 1, SSH Brute Force
 
-**The Alert:**
+**The alert:**
+
 ```
-Time: 02:14 AM
-Rule: SSH Brute Force Detected
-Source IP: 185.220.101.45
-Destination: 10.0.0.15 (Linux server — DMZ)
+Time:            02:14
+Rule:            SSH brute force detected
+Source IP:       185.220.101.45
+Destination:     10.0.0.15, Linux server, DMZ
 Failed attempts: 47 in 90 seconds
-Followed by: 1 successful login
-Severity: HIGH
+Followed by:     1 successful login
+Severity:        HIGH
 ```
 
-**What do you do? Walk me through step by step.**
+**Walk me through it.**
+
+### Model answer
+
+```
+1. Acknowledge in the ticketing system
+   Log time received and initial observations
+
+2. Enrich the source IP
+   VirusTotal reputation
+   AbuseIPDB abuse score and distinct reporter count
+   whois for owner, netrange, country
+   Result: known Tor exit node, 100 percent confidence
+
+3. Confirm the successful login
+   Check auth logs on 10.0.0.15
+   Identify which account
+   Establish what happened after the login
+
+4. Contain
+   Block the source at the firewall
+   Isolate 10.0.0.15
+   Disable the compromised account and revoke sessions
+
+5. Escalate to Tier 2 with full triage notes
+   Confirmed compromise, host needs forensics
+
+6. Document
+   Source, destination, timeline, every action taken
+
+MITRE: T1110.001 brute force, T1078 valid accounts
+```
+
+**The step candidates skip:** step 3. Forty seven failures is an attack that failed. Forty seven failures and one success is an attacker with a shell. If the answer stops at "block the IP," the alert has been closed with the intruder still inside.
+
+**Second miss:** revoking sessions. Disabling the account does not kill a session already open. The attacker keeps working while the ticket says resolved.
+
+**Third:** block the netrange, not the IP. A Tor exit sits in a range of 32 addresses. Blocking one blocks one.
 
 ---
 
-### Model Answer:
+## Scenario 2, Phishing Email
+
+**The alert:**
 
 ```
-Step 1 — Acknowledge the alert in the ticketing system
-         Log time received and initial observations
-
-Step 2 — Investigate the source IP
-         → VirusTotal: check reputation
-         → AbuseIPDB: check abuse score
-         → Whois: check owner and country
-         Result: 185.220.101.45 = known Tor exit node,
-         100% abuse confidence
-
-Step 3 — Confirm the successful login
-         → Check auth logs on 10.0.0.15
-         → Identify which account was compromised
-         → Check what the attacker did after login
-
-Step 4 — Contain immediately
-         → Block 185.220.101.45 at the firewall
-         → Isolate 10.0.0.15 from the network
-         → Disable the compromised user account
-
-Step 5 — Escalate to Tier 2
-         → Full triage notes included
-         → Confirmed compromise host needs forensics
-
-Step 6 — Document everything
-         → Source IP, destination, timeline, actions taken
-
-MITRE: T1110.001 Brute Force, T1078 Valid Accounts
-```
-
----
-
-## Scenario 2 — Phishing Email
-
-**The Alert:**
-```
-Time: 10:32 AM
-Rule: Phishing Email Detected
-From: security@paypal.com
-Reply-To: attacker@secure-login-verify.com
-To: brad@company.com
-Subject: Urgent: Your account has been compromised
-Sending IP: 45.131.214.85
-Attachment: invoice.pdf
-Severity: HIGH
+Time:        10:32
+Rule:        Phishing email detected
+From:        security@paypal.com
+Reply-To:    attacker@secure-login-verify.com
+To:          brad@company.com
+Subject:     Urgent: Your account has been compromised
+Sending IP:  45.131.214.85
+Attachment:  invoice.pdf
+Severity:    HIGH
 ```
 
 **What do you do?**
 
+### Model answer
+
+```
+1. Do not click, do not open the attachment
+
+2. Read the headers
+   From paypal.com, spoofed
+   Reply-To secure-login-verify.com, the real attacker
+   Sending IP 45.131.214.85, enrich it
+   SPF and DKIM, present or absent
+
+3. Investigate the IOCs
+   VirusTotal on the IP and the domain
+   MXToolbox for full header analysis
+   URLScan for any links, do not visit them
+
+4. Scope it
+   Who else received this?
+   Did anyone click?
+   Check proxy logs for visits to the domain
+
+5. Contain
+   Quarantine across all mailboxes
+   Block the sender domain at the gateway
+   Block the sending IP
+
+6. Notify
+   The recipient first, then a targeted awareness note
+
+7. Document, and escalate if anyone clicked
+
+MITRE: T1566.002 spearphishing link,
+       T1036.005 masquerading
+```
+
+**The step candidates skip:** step 4. Quarantining the email feels like resolution. It stops the next victim and does nothing for the twenty people who already got it, or the one who already typed their password in. Until you know who clicked, you do not know the size of the incident.
+
+**Note on the Reply-To:** it is the strongest indicator in the header. The From can lie freely. The Reply-To has to be true, because the attacker needs the reply to reach them.
+
 ---
 
-### Model Answer:
+## Scenario 3, Ransomware
+
+**The alert:**
 
 ```
-Step 1 — Do not click any links or open the attachment
-
-Step 2 — Analyse the email headers
-         → From: paypal.com spoofed
-         → Reply-To: secure-login-verify.com real attacker
-         → Sending IP: 45.131.214.85 check reputation
-         → SPF/DKIM: check if present
-
-Step 3 — Investigate the IOCs
-         → VirusTotal: check sending IP and domain
-         → MXToolbox: analyse full headers
-         → URLScan.io: check any links in the email
-
-Step 4 — Check scope
-         → Did other users receive this email?
-         → Did anyone click the link or open the attachment?
-         → Check proxy logs for any visits to the malicious domain
-
-Step 5 — Contain
-         → Quarantine the email at the gateway
-         → Block the sending domain
-         → Block the sending IP
-
-Step 6 — Notify and educate
-         → Alert the recipient do not click anything
-         → Send company-wide awareness reminder
-
-Step 7 — Document and escalate if user clicked
-
-MITRE: T1566.001 Spearphishing, T1036.005 Masquerading
-```
-
----
-
-## Scenario 3 — Ransomware Alert
-
-**The Alert:**
-```
-Time: 03:47 AM
-Rule: Mass File Encryption Detected
-Host: DESKTOP-HR-04 (HR department workstation)
-User: sarah.johnson
-Activity: 3,847 files renamed to .locked extension
-          in 4 minutes
-Network: Outbound connection to 91.238.14.7:443
+Time:     03:47
+Rule:     Mass file encryption detected
+Host:     DESKTOP-HR-04, HR workstation
+User:     sarah.johnson
+Activity: 3,847 files renamed to .locked in 4 minutes
+Network:  Outbound to 91.238.14.7:443
 Severity: CRITICAL
 ```
 
 **What do you do?**
 
+### Model answer
+
+```
+1. Contain first. Do not investigate first.
+   Every second is more files.
+
+2. Isolate the host
+   Use EDR network isolation, not the power button
+   Preserve memory state
+
+3. Cut the C2
+   Block 91.238.14.7 at the firewall
+   Check whether any other host is talking to it
+
+4. Scope it
+   Any other host showing the same file activity?
+   SIEM for lateral movement from DESKTOP-HR-04
+   SMB traffic specifically, that is how it spreads
+
+5. Escalate immediately
+   Tier 2 and IR
+   Management
+   Legal and compliance if PII is in scope
+
+6. Preserve evidence
+   Do not reboot
+   Memory dump if possible
+   Preserve all logs
+
+7. Recovery planning
+   Identify the last clean backup
+   Do not restore until eradication is confirmed
+
+MITRE: T1486 data encrypted for impact,
+       T1041 exfiltration over C2 channel,
+       T1021.002 SMB admin shares
+```
+
+**Why EDR isolation and not unplugging:** pulling the cable kills volatile memory, and the encryption key may be sitting in it. It also tips the attacker. EDR isolation cuts the network and keeps the machine alive for forensics.
+
+**Why do not reboot:** same reason. Reboot destroys memory, and memory may be the only place the key exists.
+
+**The inversion:** this scenario is the exception to every other one here. Normally you validate before you act. Ransomware moves faster than triage, so containment comes first and the investigation happens to an isolated host. A candidate who runs the standard order on this one has watched 3,847 files become 30,000 while they enriched an IP.
+
 ---
 
-### Model Answer:
+## Scenario 4, Suspicious PowerShell
+
+**The alert:**
 
 ```
-Step 1 — This is CRITICAL act immediately
-         Do not wait. Do not investigate first. CONTAIN FIRST.
-
-Step 2 — Isolate the host immediately
-         → Disconnect DESKTOP-HR-04 from the network
-         → Use EDR to isolate do not physically unplug yet
-         → Preserve memory state for forensics
-
-Step 3 — Block C2 communication
-         → Block 91.238.14.7 at the firewall immediately
-         → Check if other hosts are connecting to same IP
-
-Step 4 — Assess the scope
-         → Are other hosts showing similar file activity?
-         → Check SIEM for lateral movement from DESKTOP-HR-04
-         → Check SMB traffic ransomware spreads via SMB
-
-Step 5 — Escalate immediately
-         → Tier 2 + Incident Response team
-         → Management notification
-         → Legal and compliance if PII may be affected
-
-Step 6 — Preserve evidence
-         → Do not reboot the machine
-         → Capture memory dump if possible
-         → Preserve all logs
-
-Step 7 — Recovery planning
-         → Identify last clean backup of affected files
-         → Do not restore until malware is fully eradicated
-
-MITRE: T1486 Data Encrypted for Impact,
-       T1041 Exfiltration Over C2 Channel,
-       T1021.002 SMB/Windows Admin Shares
-```
-
----
-
-## Scenario 4 — Suspicious PowerShell
-
-**The Alert:**
-```
-Time: 11:23 AM
-Rule: Suspicious PowerShell Execution
-Host: WORKSTATION-22
-User: mike.chen
-Command: powershell.exe -ExecutionPolicy Bypass
-         -EncodedCommand
-         SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQA...
+Time:           11:23
+Rule:           Suspicious PowerShell execution
+Host:           WORKSTATION-22
+User:           mike.chen
+Command:        powershell.exe -ExecutionPolicy Bypass
+                -EncodedCommand SQBFAFgAIAAoAE4AZQB3...
 Parent Process: WINWORD.EXE
-Severity: HIGH
+Severity:       HIGH
 ```
 
 **What do you do?**
 
----
-
-### Model Answer:
+### Model answer
 
 ```
-Step 1 — This is a strong malware indicator
-         PowerShell launched by Word = macro-based malware
+1. Read the parent process first
+   WINWORD.EXE spawning PowerShell is macro malware.
+   Word does not do this. That single line is the alert.
 
-Step 2 — Decode the base64 command
-         → Use CyberChef to decode the EncodedCommand
-         → Identify what the PowerShell is actually doing
+2. Decode the base64
+   CyberChef, or PowerShell script block logging,
+   Event ID 4104, which logs the decoded command
+   Find out what it actually does
 
-Step 3 — Investigate the parent process
-         → WINWORD.EXE spawning PowerShell = malicious macro
-         → Check what document mike.chen opened recently
-         → Was the document received by email?
+3. Trace the document
+   What did mike.chen open?
+   Did it arrive by email?
+   Who else received it?
 
-Step 4 — Check EDR telemetry
-         → What processes did the PowerShell spawn?
-         → Did it download anything from the internet?
-         → Did it modify any files or registry keys?
+4. Check EDR telemetry
+   What did the PowerShell spawn?
+   Did it download anything?
+   Registry or file modifications?
 
-Step 5 — Contain
-         → Isolate WORKSTATION-22 via EDR
-         → Disable mike.chen's account temporarily
-         → Block any external IPs contacted
+5. Contain
+   Isolate WORKSTATION-22 via EDR
+   Disable mike.chen's account and revoke sessions
+   Block any external IPs contacted
 
-Step 6 — Escalate to Tier 2
-         → Full PowerShell command decoded and included
-         → EDR telemetry included in ticket
+6. Escalate with the decoded command in the ticket
 
-Step 7 — Check for lateral movement
-         → Did mike.chen's credentials get used elsewhere?
-         → Check DC logs for unusual auth events
+7. Check for lateral movement
+   Were mike.chen's credentials used elsewhere?
+   DC logs for unusual auth
 
 MITRE: T1059.001 PowerShell,
-       T1566.001 Spearphishing Attachment,
-       T1204.002 Malicious File
+       T1566.001 spearphishing attachment,
+       T1204.002 malicious file
 ```
+
+**The step candidates skip:** step 1. The base64 is the flashy part and everyone reaches for CyberChef. But `-EncodedCommand` alone is not conclusive, plenty of legitimate tooling uses it. WINWORD.EXE as the parent is what makes this malicious before anything is decoded. Read the process tree first.
+
+**Worth naming:** `-ExecutionPolicy Bypass` is not a security control being defeated. Execution policy was never a security boundary and Microsoft says so. It is an indicator, not a breach.
 
 ---
 
-## Scenario 5 — Impossible Travel
+## Scenario 5, Impossible Travel
 
-**The Alert:**
+**The alert:**
+
 ```
-Time: 08:15 AM
-Rule: Impossible Travel Detected
-User: james.wilson@company.com
-Login 1: 07:45 AM from London, UK — IP 81.2.69.144
-Login 2: 08:10 AM from Lagos, Nigeria — IP 105.112.0.1
-Time between logins: 25 minutes
+Time:     08:15
+Rule:     Impossible travel detected
+User:     james.wilson@company.com
+Login 1:  07:45, London UK, 81.2.69.144
+Login 2:  08:10, Lagos Nigeria, 105.112.0.1
+Gap:      25 minutes
 Distance: 5,000 miles
 Severity: HIGH
 ```
 
 **What do you do?**
 
+### Model answer
+
+```
+1. Physics says this is not one person
+
+2. Investigate both logins before assuming
+   Are either IP known for this user?
+   Could a VPN or corporate proxy explain it?
+   Any travel on record with HR?
+
+3. Contact the user out of band
+   Call them. Do not email.
+   If the account is compromised the attacker
+   reads the email.
+   Ask where they physically are.
+
+4. Contain if confirmed
+   Reset the password
+   Revoke all active sessions
+   Disable the account if needed
+   Block the suspicious IP
+
+5. Investigate the session
+   What did the Lagos session do?
+   What was accessed, downloaded, or read?
+
+6. Escalate and document with the full timeline
+
+MITRE: T1078 valid accounts
+```
+
+**The step candidates skip:** step 2. Impossible travel is the noisiest rule in most SIEMs. A VPN, a mobile carrier CGNAT, a cloud sync client, a badly geolocated IP block — all produce this alert on a completely innocent user. Jumping to containment locks out a real employee and teaches the business that the SOC cries wolf.
+
+**But do not swing the other way.** Investigate fast, do not investigate slowly. If it is real, the attacker has a live session right now.
+
+**Why call and not email:** if the account is compromised, the attacker is in the mailbox. An email asking "are you in Lagos?" tells the attacker they have been spotted.
+
 ---
 
-### Model Answer:
+## Scoring
 
 ```
-Step 1 — This indicates credential compromise
-         No human can travel 5,000 miles in 25 minutes
+5  All steps, correct order, named the skipped step
+4  Most steps, minor gaps
+3  Key steps, missed containment or escalation
+2  Some correct ideas, significant gaps
+1  Needs work
 
-Step 2 — Investigate both logins
-         → Check if both IPs are known to james.wilson
-         → Check if VPN or proxy could explain the location
-         → Check the user's travel schedule with HR
-
-Step 3 — Contact the user immediately
-         → Call james.wilson directly — not email
-         → Ask if they are in Lagos or London right now
-         → If London: Lagos login is attacker
-         → If neither: both logins may be attacker
-
-Step 4 — Contain if compromise confirmed
-         → Reset james.wilson's password immediately
-         → Revoke all active sessions
-         → Disable account temporarily if needed
-         → Block the suspicious IP
-
-Step 5 — Investigate what the attacker accessed
-         → What did the Lagos login session do?
-         → What data or systems were accessed?
-         → Were any files downloaded or emails read?
-
-Step 6 — Escalate and document
-         → Full timeline included in ticket
-         → Both IPs investigated and documented
-
-MITRE: T1078 Valid Accounts,
-       T1133 External Remote Services
+Target: 4 or above on all five before interviewing.
 ```
 
----
-
-## Scenario Scoring Guide
-
-After each scenario score yourself:
-
-```
-5/5 — All steps covered in correct order
-4/5 — Most steps covered — minor gaps
-3/5 — Key steps covered — missed containment or escalation
-2/5 — Some correct ideas — significant gaps
-1/5 — Needs significant improvement
-
-Target score: 4/5 or above on all 5 scenarios
-before your interview
-```
+Score the order, not just the content. Listing every step in the wrong sequence is the same failure as missing one.
