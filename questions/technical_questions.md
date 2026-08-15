@@ -1,8 +1,5 @@
 # SOC Analyst Technical Interview Questions
 
-Analyst: William | @WilliamInCyber | GitHub: WiLL75G
-
----
 
 ## Category 1, Networking Fundamentals
 
