@@ -1,8 +1,12 @@
 # SOC Analyst Incident Response Scenarios
 
-Read each alert as if it just fired. Write your answer before reading the model. Score honestly.
+Read each alert as if it just fired.
 
-Every scenario here has one step candidates skip. It is named at the bottom of each model answer, because knowing what you would miss is worth more than knowing what you would do.
+Write your answer before reading the model.
+
+Score honestly.
+
+Every scenario has one step candidates commonly skip. It is named after each model answer because knowing what you would miss is worth more than memorizing a perfect response.
 
 ---
 
@@ -10,7 +14,7 @@ Every scenario here has one step candidates skip. It is named at the bottom of e
 
 **The alert:**
 
-```
+```text
 Time:            02:14
 Rule:            SSH brute force detected
 Source IP:       185.220.101.45
@@ -24,40 +28,66 @@ Severity:        HIGH
 
 ### Model answer
 
+```text
+1. Acknowledge the alert
+   Record the time and initial observations
+
+2. Validate the authentication pattern
+   Confirm the failed attempts
+   Confirm the successful authentication
+   Determine whether the success came from the same source
+   Identify the account involved
+
+3. Investigate what followed
+   Review authentication and host telemetry
+   Look for commands, processes, network activity,
+   privilege changes, file changes or persistence
+
+4. Enrich the source
+   VirusTotal
+   AbuseIPDB
+   WHOIS
+   Treat reputation as context, not attribution
+
+5. Contain according to the evidence and procedure
+   Block the confirmed malicious source where appropriate
+   Isolate the affected host if compromise is established
+   Disable or reset the affected account if required
+   Revoke active sessions
+
+6. Escalate
+   Provide the authentication evidence, affected account,
+   timeline, containment actions and unresolved questions
+
+7. Document
+   Record the evidence and every response action
 ```
-1. Acknowledge in the ticketing system
-   Log time received and initial observations
 
-2. Enrich the source IP
-   VirusTotal reputation
-   AbuseIPDB abuse score and distinct reporter count
-   whois for owner, netrange, country
-   Result: known Tor exit node, 100 percent confidence
+MITRE:
 
-3. Confirm the successful login
-   Check auth logs on 10.0.0.15
-   Identify which account
-   Establish what happened after the login
+```text
+T1110.001 Password Guessing
 
-4. Contain
-   Block the source at the firewall
-   Isolate 10.0.0.15
-   Disable the compromised account and revoke sessions
-
-5. Escalate to Tier 2 with full triage notes
-   Confirmed compromise, host needs forensics
-
-6. Document
-   Source, destination, timeline, every action taken
-
-MITRE: T1110.001 brute force, T1078 valid accounts
+T1078 Valid Accounts once step 2 identifies the account
+behind the successful login. That confirmation is quick
+here, the login immediately follows the brute force from
+the same source, unlike scenario 5 where the same technique
+stays open until the user is actually reached.
 ```
 
-**The step candidates skip:** step 3. Forty seven failures is an attack that failed. Forty seven failures and one success is an attacker with a shell. If the answer stops at "block the IP," the alert has been closed with the intruder still inside.
+**The step candidates skip:** confirming and investigating the successful authentication.
 
-**Second miss:** revoking sessions. Disabling the account does not kill a session already open. The attacker keeps working while the ticket says resolved.
+Forty seven failures show repeated password guessing.
 
-**Third:** block the netrange, not the IP. A Tor exit sits in a range of 32 addresses. Blocking one blocks one.
+A subsequent success from the same source against the targeted account changes the investigation significantly, but the analyst still needs to establish the account involved and what occurred after authentication.
+
+**Second miss:** session revocation.
+
+Changing or disabling credentials does not necessarily terminate every existing authenticated session.
+
+**Third:** broader network blocking is a containment decision, not an evidence conclusion.
+
+If the source belongs to a larger Tor exit range, the evidence establishes activity from the observed address. Expanding a block to the wider range requires a risk decision based on the environment and active threat.
 
 ---
 
@@ -65,7 +95,7 @@ MITRE: T1110.001 brute force, T1078 valid accounts
 
 **The alert:**
 
-```
+```text
 Time:        10:32
 Rule:        Phishing email detected
 From:        security@paypal.com
@@ -81,42 +111,61 @@ Severity:    HIGH
 
 ### Model answer
 
+```text
+1. Preserve the message
+   Do not open the attachment
+   Do not interact with suspicious links
+
+2. Review the headers
+   Examine From
+   Examine Reply-To
+   Review the sending infrastructure
+   Review SPF, DKIM and DMARC results when available
+
+3. Investigate the indicators
+   Enrich the sending IP
+   Enrich relevant domains
+   Hash and safely investigate the attachment if available
+   Review URLs without directly visiting them
+
+4. Scope the campaign
+   Who else received the message?
+   Did anyone open the attachment?
+   Did anyone visit associated infrastructure?
+   Check email gateway, proxy, endpoint and identity
+   telemetry where available
+
+5. Contain based on confirmed indicators
+   Quarantine matching messages
+   Block confirmed malicious infrastructure
+   Apply endpoint or account containment if interaction
+   is established
+
+6. Notify and escalate according to procedure
+
+7. Document the evidence, scope and response
 ```
-1. Do not click, do not open the attachment
 
-2. Read the headers
-   From paypal.com, spoofed
-   Reply-To secure-login-verify.com, the real attacker
-   Sending IP 45.131.214.85, enrich it
-   SPF and DKIM, present or absent
+MITRE:
 
-3. Investigate the IOCs
-   VirusTotal on the IP and the domain
-   MXToolbox for full header analysis
-   URLScan for any links, do not visit them
+```text
+T1566.001 Spearphishing Attachment is conditional.
 
-4. Scope it
-   Who else received this?
-   Did anyone click?
-   Check proxy logs for visits to the domain
-
-5. Contain
-   Quarantine across all mailboxes
-   Block the sender domain at the gateway
-   Block the sending IP
-
-6. Notify
-   The recipient first, then a targeted awareness note
-
-7. Document, and escalate if anyone clicked
-
-MITRE: T1566.002 spearphishing link,
-       T1036.005 masquerading
+The email contains invoice.pdf, but the investigation still
+needs to establish that the attachment is the malicious
+delivery mechanism before reporting the subtechnique as
+observed.
 ```
 
-**The step candidates skip:** step 4. Quarantining the email feels like resolution. It stops the next victim and does nothing for the twenty people who already got it, or the one who already typed their password in. Until you know who clicked, you do not know the size of the incident.
+**The step candidates skip:** scope.
 
-**Note on the Reply-To:** it is the strongest indicator in the header. The From can lie freely. The Reply-To has to be true, because the attacker needs the reply to reach them.
+Quarantining one message does not answer whether other recipients received the same campaign or whether anyone interacted with it.
+
+**Reply-To note:** the mismatch is useful evidence.
+
+`Reply-To` is sender controlled just like `From`. It may point toward infrastructure useful to the attacker, but it is not an authenticated statement of the attacker's identity.
+
+`T1036.005 Match Legitimate Resource Name or Location` is not mapped merely because the displayed sender impersonates a brand.
 
 ---
 
@@ -124,7 +173,7 @@ MITRE: T1566.002 spearphishing link,
 
 **The alert:**
 
-```
+```text
 Time:     03:47
 Rule:     Mass file encryption detected
 Host:     DESKTOP-HR-04, HR workstation
@@ -138,47 +187,66 @@ Severity: CRITICAL
 
 ### Model answer
 
-```
-1. Contain first. Do not investigate first.
-   Every second is more files.
+```text
+1. Begin rapid containment
+   Mass encryption is actively affecting the endpoint
 
 2. Isolate the host
-   Use EDR network isolation, not the power button
-   Preserve memory state
+   Prefer an approved isolation method that stops network
+   spread while preserving useful evidence where possible
 
-3. Cut the C2
-   Block 91.238.14.7 at the firewall
-   Check whether any other host is talking to it
+3. Investigate the external connection
+   Determine what 91.238.14.7 represents
+   Check whether other hosts communicated with it
+   Do not call the traffic exfiltration without evidence
 
-4. Scope it
-   Any other host showing the same file activity?
-   SIEM for lateral movement from DESKTOP-HR-04
-   SMB traffic specifically, that is how it spreads
+4. Scope the incident
+   Search for the same encryption behaviour elsewhere
+   Investigate possible lateral movement
+   Examine SMB activity if telemetry makes it relevant
+   Do not assume SMB was the propagation path
 
 5. Escalate immediately
-   Tier 2 and IR
-   Management
-   Legal and compliance if PII is in scope
+   Tier 2 or incident response
+   Appropriate management
+   Legal or compliance when required by data and policy
 
 6. Preserve evidence
-   Do not reboot
-   Memory dump if possible
-   Preserve all logs
+   Preserve relevant endpoint and network telemetry
+   Capture volatile evidence when appropriate and possible
+   Avoid unnecessary rebooting or destruction of evidence
 
-7. Recovery planning
-   Identify the last clean backup
-   Do not restore until eradication is confirmed
-
-MITRE: T1486 data encrypted for impact,
-       T1041 exfiltration over C2 channel,
-       T1021.002 SMB admin shares
+7. Plan eradication and recovery
+   Determine persistence and scope
+   Identify known clean recovery points
+   Validate eradication before restoration
 ```
 
-**Why EDR isolation and not unplugging:** pulling the cable kills volatile memory, and the encryption key may be sitting in it. It also tips the attacker. EDR isolation cuts the network and keeps the machine alive for forensics.
+MITRE:
 
-**Why do not reboot:** same reason. Reboot destroys memory, and memory may be the only place the key exists.
+```text
+CONFIRMED
 
-**The inversion:** this scenario is the exception to every other one here. Normally you validate before you act. Ransomware moves faster than triage, so containment comes first and the investigation happens to an isolated host. A candidate who runs the standard order on this one has watched 3,847 files become 30,000 while they enriched an IP.
+T1486 Data Encrypted for Impact
+
+
+CONDITIONAL
+
+T1041 Exfiltration Over C2 Channel
+Requires evidence that data was actually exfiltrated.
+
+T1021.002 SMB Windows Admin Shares
+Requires evidence that SMB admin shares were actually
+used for lateral movement.
+```
+
+**The step candidates skip:** adapting the sequence to the incident.
+
+Rapidly progressing encryption can justify containment before a full investigation is complete.
+
+That does not mean evidence preservation stops mattering.
+
+The response should contain the damage while preserving as much useful evidence as circumstances allow.
 
 ---
 
@@ -186,7 +254,7 @@ MITRE: T1486 data encrypted for impact,
 
 **The alert:**
 
-```
+```text
 Time:           11:23
 Rule:           Suspicious PowerShell execution
 Host:           WORKSTATION-22
@@ -201,45 +269,69 @@ Severity:       HIGH
 
 ### Model answer
 
-```
-1. Read the parent process first
-   WINWORD.EXE spawning PowerShell is macro malware.
-   Word does not do this. That single line is the alert.
+```text
+1. Examine the process relationship
+   WINWORD.EXE spawning PowerShell is highly suspicious
+   context and deserves immediate investigation
 
-2. Decode the base64
-   CyberChef, or PowerShell script block logging,
-   Event ID 4104, which logs the decoded command
-   Find out what it actually does
+2. Decode and inspect the PowerShell
+   Decode the EncodedCommand safely
+   Review PowerShell Script Block Logging such as
+   Event ID 4104 when available
+   Determine what the command actually attempted
 
 3. Trace the document
-   What did mike.chen open?
-   Did it arrive by email?
-   Who else received it?
+   Identify the document involved
+   Determine how it reached the endpoint
+   Determine whether the user opened it
+   Check whether other users received the same artifact
 
-4. Check EDR telemetry
-   What did the PowerShell spawn?
-   Did it download anything?
-   Registry or file modifications?
+4. Review endpoint telemetry
+   Child processes
+   Downloads
+   File changes
+   Registry activity
+   Network connections
+   Credential or persistence activity
 
-5. Contain
-   Isolate WORKSTATION-22 via EDR
-   Disable mike.chen's account and revoke sessions
-   Block any external IPs contacted
+5. Contain according to the findings
+   Isolate the host when warranted
+   Apply account containment if credentials are affected
+   Block confirmed malicious infrastructure
 
-6. Escalate with the decoded command in the ticket
+6. Escalate with the decoded command and evidence
 
-7. Check for lateral movement
-   Were mike.chen's credentials used elsewhere?
-   DC logs for unusual auth
-
-MITRE: T1059.001 PowerShell,
-       T1566.001 spearphishing attachment,
-       T1204.002 malicious file
+7. Scope for related activity
+   Search for the same document, command, hash,
+   destination or authentication activity elsewhere
 ```
 
-**The step candidates skip:** step 1. The base64 is the flashy part and everyone reaches for CyberChef. But `-EncodedCommand` alone is not conclusive, plenty of legitimate tooling uses it. WINWORD.EXE as the parent is what makes this malicious before anything is decoded. Read the process tree first.
+MITRE:
 
-**Worth naming:** `-ExecutionPolicy Bypass` is not a security control being defeated. Execution policy was never a security boundary and Microsoft says so. It is an indicator, not a breach.
+```text
+CONFIRMED
+
+T1059.001 PowerShell
+
+
+CONDITIONAL
+
+T1204.002 Malicious File
+Requires evidence that the user executed or opened the
+malicious file.
+
+T1566.001 Spearphishing Attachment
+Requires evidence that the document was delivered through
+a phishing attachment.
+```
+
+**The step candidates skip:** the process relationship.
+
+The encoded command is visually interesting, but `EncodedCommand` alone is not enough to establish malicious execution.
+
+The unusual parent child relationship makes the activity a strong investigation lead while decoding and endpoint telemetry establish what actually occurred.
+
+**Execution policy note:** `ExecutionPolicy Bypass` is useful context, but PowerShell execution policy is not intended to function as a security boundary.
 
 ---
 
@@ -247,7 +339,7 @@ MITRE: T1059.001 PowerShell,
 
 **The alert:**
 
-```
+```text
 Time:     08:15
 Rule:     Impossible travel detected
 User:     james.wilson@company.com
@@ -262,53 +354,84 @@ Severity: HIGH
 
 ### Model answer
 
+```text
+1. Validate the alert
+   The locations cannot represent ordinary physical travel
+   by one person in the stated time, but the IP locations
+   may not represent the user's physical location
+
+2. Investigate both authentication events
+   Are either IP addresses known for this user?
+   Could VPN, proxy, mobile carrier or cloud infrastructure
+   explain the locations?
+   Review device, MFA and identity context where available
+
+3. Verify with the user through an approved independent
+   communication channel when appropriate
+
+4. Contain if unauthorized access is established
+   Reset credentials where required
+   Revoke active sessions
+   Disable the account if necessary
+   Block confirmed malicious infrastructure
+
+5. Investigate the suspicious session
+   What resources were accessed?
+   Were files downloaded?
+   Were security settings changed?
+   Was additional authentication activity observed?
+
+6. Escalate and document the complete timeline
 ```
-1. Physics says this is not one person
 
-2. Investigate both logins before assuming
-   Are either IP known for this user?
-   Could a VPN or corporate proxy explain it?
-   Any travel on record with HR?
+MITRE:
 
-3. Contact the user out of band
-   Call them. Do not email.
-   If the account is compromised the attacker
-   reads the email.
-   Ask where they physically are.
+```text
+T1078 Valid Accounts is conditional.
 
-4. Contain if confirmed
-   Reset the password
-   Revoke all active sessions
-   Disable the account if needed
-   Block the suspicious IP
-
-5. Investigate the session
-   What did the Lagos session do?
-   What was accessed, downloaded, or read?
-
-6. Escalate and document with the full timeline
-
-MITRE: T1078 valid accounts
+Map it when investigation establishes unauthorized use of
+the valid account rather than from the impossible travel
+alert alone.
 ```
 
-**The step candidates skip:** step 2. Impossible travel is the noisiest rule in most SIEMs. A VPN, a mobile carrier CGNAT, a cloud sync client, a badly geolocated IP block — all produce this alert on a completely innocent user. Jumping to containment locks out a real employee and teaches the business that the SOC cries wolf.
+**The step candidates skip:** validation before disruptive containment.
 
-**But do not swing the other way.** Investigate fast, do not investigate slowly. If it is real, the attacker has a live session right now.
+VPNs, proxies, mobile carrier infrastructure, cloud services and inaccurate IP geolocation can all complicate geographic login detections.
 
-**Why call and not email:** if the account is compromised, the attacker is in the mailbox. An email asking "are you in Lagos?" tells the attacker they have been spotted.
+The alert is a reason to investigate quickly.
+
+It is not proof of account compromise.
 
 ---
 
 ## Scoring
 
-```
-5  All steps, correct order, named the skipped step
-4  Most steps, minor gaps
-3  Key steps, missed containment or escalation
-2  Some correct ideas, significant gaps
+```text
+5  Complete investigation logic, appropriate sequence,
+   evidence boundaries explained
+
+4  Most important steps present, minor gaps
+
+3  Core investigation present but important response,
+   scoping or evidence steps missing
+
+2  Several correct ideas but major gaps
+
 1  Needs work
-
-Target: 4 or above on all five before interviewing.
 ```
 
-Score the order, not just the content. Listing every step in the wrong sequence is the same failure as missing one.
+Target: **4 or above on all five before interviewing.**
+
+Score the reasoning as well as the steps.
+
+A strong answer should explain:
+
+```text
+What the alert establishes
+        ↓
+What still needs investigation
+        ↓
+What action is justified now
+        ↓
+What evidence would change the verdict
+```
