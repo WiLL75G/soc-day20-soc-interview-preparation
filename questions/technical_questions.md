@@ -1,89 +1,99 @@
 # SOC Analyst Technical Interview Questions
 
-
 ## Category 1, Networking Fundamentals
 
 **Q1: What is the OSI model and why does it matter to a SOC analyst?**
 
-```
+```text
 Seven layers: Physical, Data Link, Network, Transport,
 Session, Presentation, Application.
 
 Why it matters:
-- Attacks land at specific layers, and the layer narrows
-  the vector before you have any other evidence
-- Port scans hit Layer 4, Transport
-- ARP spoofing hits Layer 2, Data Link
-- Phishing hits Layer 7, Application
-- Layer knowledge is what makes a Wireshark filter or a
-  SIEM search targeted instead of exploratory
+- Different security activity appears at different layers
+- A TCP SYN scan is primarily visible through Layer 4 behaviour
+- ARP spoofing operates at Layer 2
+- Phishing is primarily an application layer activity
+- Layer knowledge helps make Wireshark filters and SIEM
+  searches more targeted
 ```
 
-Do not just recite the layers. Tie one to real work: a MAC address is Layer 2, which is why it identifies a device even after the IP changes. That is the answer that sounds like you have used it.
+Do not just recite the layers.
+
+Tie the model to investigation evidence.
+
+A MAC address operates at Layer 2 while an IP address operates at Layer 3.
+
+DHCP evidence can correlate a leased IP with a hostname and MAC address during a particular period. Those identifiers provide additional investigative leads, but they should not automatically be treated as permanent device or user identity.
 
 ---
 
 **Q2: What is the difference between TCP and UDP?**
 
-```
+```text
 TCP:
-- Connection oriented, handshake before data
-- Reliable, guarantees delivery and order
-- Slower, acknowledgement overhead
-- HTTP, HTTPS, SSH, FTP, SMTP
+- Connection oriented
+- Uses a handshake before normal data transfer
+- Provides reliable ordered delivery
+- Has acknowledgement and connection management overhead
+- Used by protocols such as HTTP, HTTPS, SSH and SMTP
 
 UDP:
-- Connectionless, no handshake
-- No delivery guarantee
-- Faster, no overhead
-- DNS, DHCP, VoIP, streaming
+- Connectionless
+- No TCP style handshake
+- Does not guarantee delivery or ordering
+- Lower protocol overhead
+- Used by protocols such as DNS and DHCP
+```
 
 SOC relevance:
-Unusual UDP volume can mean DNS tunnelling or exfiltration.
-UDP is attractive to attackers precisely because it is
-noisy, expected, and rarely inspected.
-A SYN flood is the TCP side of the same idea.
-```
+
+Unusual TCP or UDP activity can become an investigation lead depending on destination, volume, timing, protocol, and surrounding evidence.
+
+For example, DNS can be abused for tunnelling, but high DNS or UDP volume alone does not establish tunnelling.
 
 ---
 
 **Q3: Explain the TCP three way handshake.**
 
+```text
+SYN      Client to server, requests a connection
+SYN ACK  Server to client, acknowledges and responds
+ACK      Client to server, completes the handshake
 ```
-SYN      Client to server, "I want to connect"
-SYN-ACK  Server to client, "Acknowledged, ready"
-ACK      Client to server, "Established"
-```
 
-The SOC answer is what happens when it does not complete.
+The SOC answer should go beyond memorizing the three packets.
 
-A SYN flood sends thousands of SYNs and never sends ACK, holding server resources open. In Wireshark that is a wall of SYN with no matching SYN-ACK.
+A SYN flood generates a large volume of connection attempts that are not completed normally. A server may still send SYN ACK responses, but the expected final ACKs are absent or insufficient and half open connection state can consume resources.
 
-A SYN scan looks similar and is not the same thing. The scanner wants the SYN-ACK, because the SYN-ACK is the answer. It just never completes the session. Volume distinguishes a flood from a scan, and intent distinguishes both from a busy server.
+A SYN scan also intentionally avoids completing normal connections to many ports.
 
-Say that out loud. Most candidates stop at the three arrows.
+The difference is established through the wider packet pattern, rate, destinations, responses, and investigation context rather than one SYN packet alone.
 
 ---
 
 **Q4: What ports should every SOC analyst know?**
 
-```
-20/21  FTP, unencrypted, credentials in cleartext
-22     SSH, brute force target
-23     Telnet, unencrypted, should not exist
-25     SMTP, mail transfer
-53     DNS, tunnelling and exfiltration path
-80     HTTP, unencrypted web
-110    POP3, mail retrieval
-143    IMAP, mail retrieval
-443    HTTPS, and where attackers hide plain HTTP
-445    SMB, WannaCry's path
-3306   MySQL, should never face the internet
-3389   RDP, the most common ransomware ingress
-8080   HTTP alternate, proxies
+```text
+20/21  FTP
+22     SSH
+23     Telnet
+25     SMTP
+53     DNS
+80     HTTP
+110    POP3
+143    IMAP
+443    HTTPS
+445    SMB
+3306   MySQL
+3389   RDP
+8080   Common HTTP alternate
 ```
 
-The port list is table stakes. The follow up is what they are testing: why does port 443 carrying plain HTTP matter? Because everyone assumes 443 is TLS and stops inspecting. The port is not the protocol.
+The port number is a starting point, not proof of the application protocol.
+
+Port 443 commonly carries HTTPS, but seeing TCP destination port 443 does not by itself prove the payload is TLS.
+
+The same principle applies to service exposure. MySQL on 3306 should never face the internet directly. There is essentially no legitimate reason for a raw database port to be reachable from outside the network, application layers exist to mediate that access.
 
 ---
 
@@ -91,60 +101,77 @@ The port list is table stakes. The follow up is what they are testing: why does 
 
 **Q5: What is the CIA triad?**
 
+```text
+Confidentiality
+Only authorised users can access protected information.
+
+Example violation:
+Sensitive customer records are exposed.
+
+Integrity
+Information remains accurate and is not modified
+without authorisation.
+
+Example violation:
+An attacker changes financial records.
+
+Availability
+Systems and information remain accessible when needed.
+
+Example violation:
+A DDoS attack makes a service unavailable.
 ```
-Confidentiality: only authorised users can access the data
-  Violated by: a breach exposing customer records
 
-Integrity: the data is accurate and untampered
-  Violated by: an attacker modifying financial records
+The CIA triad provides a useful way to describe the security impact of an incident.
 
-Availability: systems are reachable when needed
-  Violated by: a DDoS taking a service down
-
-SOC relevance: every incident violates at least one.
-Naming which one drives the priority. An integrity
-violation on financial data outranks an availability
-hit on a marketing page.
-```
+The affected property can also help explain business impact and response priority.
 
 ---
 
 **Q6: Authentication versus authorisation?**
 
-```
-Authentication: proving who you are
-  Username and password, MFA
+```text
+Authentication:
+Proving an identity.
 
-Authorisation: what you may do once proven
-  Your account reads files but cannot delete them
+Examples:
+Password
+MFA
+Certificate
 
-SOC relevance:
-Credential theft defeats authentication.
-Privilege escalation defeats authorisation.
-An attacker usually needs both, and the gap between
-them is where detection lives.
+Authorisation:
+Determining what an authenticated identity is permitted
+to access or perform.
 ```
+
+A compromised credential can defeat an authentication control.
+
+Privilege escalation can allow an attacker to obtain permissions beyond those originally granted.
+
+The distinction matters because successful authentication does not automatically mean the resulting activity was authorised.
 
 ---
 
 **Q7: What is defence in depth?**
 
+```text
+Multiple security controls placed across different layers
+so one control failure does not automatically expose the
+entire environment.
+
+Examples:
+
+Perimeter     Firewall, IPS
+Network       Segmentation
+Endpoint      EDR, antivirus
+Application   WAF, input validation
+Data          Encryption, DLP
+Human         Awareness and verification procedures
 ```
-Layered controls, so one failure does not become a breach.
 
-Perimeter    Firewall, IPS
-Network      Segmentation, VLANs
-Endpoint     EDR, antivirus
-Application  WAF, input validation
-Data         Encryption, DLP
-Human        Awareness training
+A useful operational lesson is that a control only protects the traffic or activity it actually covers.
 
-SOC relevance: when an attack succeeds, the question is
-not only what caught it. It is which layers should have
-and did not.
-```
-
-Worth adding from real work: a control only works where it sits in the path. A firewall rule that does not filter the interface the service binds to is a correct rule with no effect. Layers only help if they are actually in the traffic path.
+A configured firewall rule, for example, should be validated against actual network exposure rather than assuming configuration equals enforcement.
 
 ---
 
@@ -152,63 +179,81 @@ Worth adding from real work: a control only works where it sits in the path. A f
 
 **Q8: SIEM versus EDR?**
 
-```
+```text
 SIEM:
-- Aggregates logs across the whole environment
-- Correlates events into patterns
-- Splunk, Microsoft Sentinel, IBM QRadar
-- Answers: is this happening anywhere else?
+- Aggregates telemetry from multiple systems
+- Searches and correlates events
+- Supports detections, dashboards and investigations
+- Examples include Splunk and Microsoft Sentinel
 
 EDR:
-- Watches individual endpoints in real time
-- Can isolate a host, kill a process, pull forensics
-- CrowdStrike, Carbon Black, Microsoft Defender
-- Answers: what exactly happened on this machine?
-
-Used together. SIEM finds the campaign, EDR works
-the host.
+- Collects endpoint focused telemetry
+- Supports process and host investigation
+- Depending on the product and permissions, can support
+  response actions such as host isolation
+- Examples include Microsoft Defender for Endpoint,
+  CrowdStrike Falcon and Carbon Black
 ```
 
-Honesty rule: if you have not used CrowdStrike, QRadar, or Defender, say so when asked. "I have worked Splunk and Sentinel, the concepts transfer" is a strong answer. Implying hands on with a tool you have read about is the one lie an interviewer can catch in a single follow up question.
+They can complement each other.
+
+The SIEM can expose activity across multiple systems while EDR can provide deeper endpoint context.
+
+Honesty rule:
+
+If you have not used a product directly, say so.
+
+Transferable concepts are useful. Invented hands on experience is not.
 
 ---
 
-**Q9: What is a playbook and why use them?**
+**Q9: What is a playbook and why use one?**
 
+```text
+A documented procedure for responding to a particular
+security situation.
+
+Benefits:
+- Consistency
+- Repeatability
+- Faster decision making
+- Documentation
+- Training
+- Reduced chance of skipped steps
 ```
-A documented step by step procedure for a specific
-incident type.
 
-Why:
-- Consistency, every analyst runs the same process
-- Speed, no time spent deciding what comes next
-- Compliance, proves due process
-- Training, new analysts learn the shape of the job
+Playbooks are particularly useful when analysts are working under pressure.
 
-Common types:
-Phishing, ransomware, brute force, data exfiltration
-```
+They do not remove analyst judgment.
 
-The real answer: playbooks exist because analysts under pressure skip steps. They contain and never preserve evidence. They reset the password and leave the session alive. The playbook removes improvisation from the worst hour of someone's week.
+They provide a repeatable starting structure while allowing the response to adapt to the evidence.
 
 ---
 
-**Q10: Walk me through the incident response lifecycle.**
+**Q10: Walk me through incident response.**
 
+A practical interview sequence is:
+
+```text
+Preparation
+Detection
+Triage
+Containment
+Investigation
+Eradication
+Recovery
+Lessons learned
 ```
-Preparation    Tools ready, playbooks written, team trained
-Detection      Alert fires, is it real or false positive?
-Triage         Assess severity and scope, validate
-Containment    Stop the spread, isolate, block, disable
-Investigation  Understand what the attacker did, capture IOCs
-Eradication    Remove the threat and every persistence artefact
-Recovery       Restore with validation
-Lessons Learned Improve detection, share IOCs
-```
 
-The order is the answer. Containment before investigation limits damage. Investigation before eradication means you remove all of it rather than the part you saw. Recovery before either means you do the incident twice.
+This is a practical interview workflow, not the official current NIST lifecycle.
 
-Framework note: this maps to NIST SP 800-61, which is the one to name in an interview.
+NIST SP 800-61 Rev. 3, published in April 2025, integrates incident response recommendations with the NIST Cybersecurity Framework 2.0, mapping to all six CSF functions, Govern, Identify, Protect, Detect, Respond and Recover, rather than the four phase model Rev. 2 used.
+
+The important interview skill is explaining why the response sequence may change with the incident.
+
+For example, rapidly spreading ransomware may require immediate containment while another alert may require additional validation before disruptive action.
+
+Investigation should inform eradication, and recovery should include validation that the threat has actually been addressed.
 
 ---
 
@@ -216,49 +261,74 @@ Framework note: this maps to NIST SP 800-61, which is the one to name in an inte
 
 **Q11: What is Splunk and how do analysts use it?**
 
+```text
+Splunk can ingest, index and search machine generated
+data.
+
+SOC analysts can use it to:
+
+- Search telemetry
+- Investigate alerts
+- Correlate events
+- Build dashboards
+- Create detections
+- Review historical activity
 ```
-A SIEM that ingests, indexes, and searches machine
-generated log data.
 
-Analysts:
-- Write SPL to hunt for suspicious activity
-- Build dashboards for operational visibility
-- Create alert rules on attack patterns
-- Search historical data during investigations
+Example SSH failure query:
 
-Brute force detection:
-
+```spl
 index=main "Failed password"
 | rex "from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
 | stats count as failed_attempts by src_ip
 | where failed_attempts > 10
 ```
 
-Explain the query, do not just show it. The rex extracts the IP from raw log text. Stats turns thousands of events into a ranked list. The where clause is the threshold that separates a typo from an attack.
+Explain the query.
 
-Then say the next part, because it is what they want: the failures are not the finding. The finding is whether a success followed from the same IP.
+`rex` extracts the source IP from the raw event.
+
+`stats` aggregates failures by source.
+
+`where` applies the chosen threshold.
+
+The threshold creates a detection lead. It does not establish compromise.
+
+The next investigation question is whether the same source was associated with a successful authentication and what happened afterward.
 
 ---
 
 **Q12: How would you use Wireshark to investigate suspicious traffic?**
 
-```
-1. Load the PCAP, read the protocol mix before filtering
-2. Filter to the suspicious host
+```text
+1. Load the PCAP and review the protocol mix
+
+2. Filter on the suspicious host or destination
+
    ip.addr == 45.131.214.85
-3. Check the direction. Outbound from an internal host
-   means resident malware, not a probe
-4. Look for beaconing, regular intervals mean automation
-5. Follow TCP stream to read the conversation
-6. Statistics, Conversations for everything else the
-   host touched
-7. DHCP filter, Option 12 gives you the hostname and MAC
-8. DNS filter for every domain it tried, including
-   the failures
-9. Document as IOCs
+
+3. Establish connection direction
+
+4. Examine timing and repeated patterns
+
+5. Follow relevant TCP streams where appropriate
+
+6. Review Statistics and Conversations
+
+7. Correlate DHCP information where available
+
+8. Review relevant DNS activity
+
+9. Document indicators and unresolved questions
 ```
 
-Step 7 is the one worth naming. An IP is a lease and nobody can walk to an IP address. The hostname and MAC are the machine, and that is what turns an alert into a person the IT team can find.
+Outbound connection initiation can rule out some inbound activity, but it does not by itself establish resident malware.
+
+Regular timing can be consistent with automated beaconing, but legitimate software can also communicate periodically.
+
+DHCP information can correlate an IP address with a hostname and MAC address during the capture period.
+
+Those are useful investigative identifiers, not proof of a specific person or permanent device identity.
 
 ---
 
@@ -266,51 +336,69 @@ Step 7 is the one worth naming. An IP is a lease and nobody can walk to an IP ad
 
 **Q13: What is MITRE ATT&CK and how do you use it?**
 
-```
-A knowledge base of adversary tactics, techniques, and
-procedures built from real world observation.
+```text
+MITRE ATT&CK is a knowledge base describing adversary
+tactics and techniques based on observed behaviour.
 
-Structure:
-Tactic        The goal, e.g. Initial Access
-Technique     How, e.g. T1566 Phishing
-Sub technique The specific method, e.g. T1566.002
-              Spearphishing Link
+Tactic
+The adversary objective.
 
-Analysts:
-- Map observed activity to known behaviour
-- Find detection gaps using Navigator
-- Build rules against specific techniques
-- Communicate in a shared vocabulary
-- Anticipate the next stage of a chain
+Technique
+How the objective is pursued.
+
+Subtechnique
+A more specific implementation of a technique.
 ```
 
-The gap analysis use is the one that shows depth. If a technique has a playbook but no rule behind it, the gap is visible on paper instead of discovered during an incident.
+Analysts can use ATT&CK to:
 
-Do not overclaim on mapping. Techniques you hunted for are not techniques you observed, and an interviewer who knows the framework will hear the difference.
+```text
+Map observed behaviour
+Communicate findings
+Assess detection coverage
+Identify coverage gaps
+Support detection engineering
+Organize adversary behaviour
+```
+
+The evidence boundary matters.
+
+A technique you investigated is not automatically a technique you observed.
 
 ---
 
 **Q14: What is threat intelligence and why does it matter?**
 
-```
-Information about current and emerging threats. Who,
-what they want, how they operate.
+Threat intelligence provides external context about threats, infrastructure, campaigns, vulnerabilities, techniques, and indicators.
 
-Strategic    Industry level trends, for leadership
-Operational  Campaign level TTPs
-Tactical     IOCs, IPs, domains, hashes
+Common categories include:
 
-Analysts:
-- Enrich alerts with external context
-- Block known IOCs before they are used
-- Hunt for known TTPs in the environment
-- Prioritise patching by what is actually exploited
+```text
+Strategic
+Higher level information for organisational decisions.
 
-Sources: VirusTotal, AbuseIPDB, AlienVault OTX,
-MITRE ATT&CK, CISA alerts, vendor reports
+Operational
+Information about campaigns and adversary operations.
+
+Tactical and technical
+TTPs, indicators and other information used during
+defensive operations.
 ```
 
-Reading intel critically is the part that matters. On AbuseIPDB, 6,000 reports from 600 distinct sources is consensus. 6,000 reports from one source is one opinion repeated. Volume is not agreement.
+Sources can include:
+
+```text
+VirusTotal
+AbuseIPDB
+AlienVault OTX
+MITRE ATT&CK
+CISA
+Vendor research
+```
+
+Reputation information is context, not automatic attribution.
+
+For example, thousands of abuse reports do not by themselves identify the actor behind one specific connection.
 
 ---
 
@@ -318,68 +406,79 @@ Reading intel critically is the part that matters. On AbuseIPDB, 6,000 reports f
 
 **Q15: Virus, worm, trojan, RAT, ransomware?**
 
-```
-Virus       Attaches to a file, needs a human to spread
-Worm        Self replicates across the network, no human
-            needed, which is why it scales
-Trojan      Disguised as legitimate software, opens a
-            backdoor on execution
-RAT         A trojan giving full remote control.
-            Surveillance, theft, lateral movement.
-            Example: NetSupport Manager RAT
-Ransomware  Encrypts and demands payment. Often trojan
-            delivery plus worm style spreading.
-            Example: WannaCry, via SMB 445
+```text
+Virus
+Malicious code that infects or modifies another file
+or program and commonly depends on execution to spread.
+
+Worm
+Malware capable of self propagation between systems.
+
+Trojan
+Malware presented as legitimate or desirable software
+to encourage execution.
+
+RAT
+Remote access software or malware that provides remote
+control of a system. Legitimate remote administration
+software can also be abused by attackers.
+
+Ransomware
+Malware that denies access to data or systems, commonly
+through encryption, and demands payment.
 ```
 
-The operational distinction: a worm means containment is a race against the clock. A virus means containment is a search.
+The operational distinction matters because different propagation and execution mechanisms change containment and scoping priorities.
 
 ---
 
 **Q16: What is a man in the middle attack?**
 
+A man in the middle attack occurs when an attacker positions themselves between communicating parties and intercepts or manipulates the communication.
+
+Possible mechanisms include:
+
+```text
+ARP spoofing
+Rogue wireless access points
+Traffic interception
+Protocol downgrade techniques
 ```
-An attacker sits between two parties, and neither knows.
 
-1. Attacker positions between victim and server
-2. Victim sends data believing it is the server
-3. Attacker reads, modifies, or relays it
+Evidence depends on the mechanism.
 
-Methods:
-ARP spoofing     Layer 2, local network
-SSL stripping    Downgrade HTTPS to HTTP
-Evil twin WiFi   Fake AP intercepts traffic
+Examples can include unexpected ARP changes, certificate warnings, unusual gateway information, or protocol behaviour inconsistent with the expected secure connection.
 
-Detection: unexpected ARP entries, certificate warnings,
-gateway MAC that changed
-
-Prevention: this is why weak TLS ciphers matter. A
-downgrade attack does not break encryption, it asks
-politely for worse encryption and the server agrees.
-```
+Weak cryptographic configuration can increase exposure to some downgrade or interception scenarios, but a weak cipher finding alone does not establish that a man in the middle attack occurred.
 
 ---
 
 ## Quick Fire
 
-```
-Port 443?           HTTPS
+```text
+Port 443?           HTTPS commonly
 Port 22?            SSH
 Port 445?           SMB
 Port 3389?          RDP
-Zero day?           Vulnerability with no patch available
-CVE?                Common Vulnerabilities and Exposures ID
-CVSS?               Common Vulnerability Scoring System, 0 to 10
+Zero day?           Newly discovered or exploited vulnerability
+                    for which effective remediation may not yet
+                    be available
+CVE?                Common Vulnerabilities and Exposures identifier
+CVSS?               Common Vulnerability Scoring System
 IOC?                Indicator of Compromise
 TTP?                Tactics, Techniques, and Procedures
 SIEM?               Security Information and Event Management
 EDR?                Endpoint Detection and Response
 SOC?                Security Operations Center
-PCAP?               Packet capture file
+PCAP?               Packet capture
 SPL?                Search Processing Language
-KQL?                Kusto Query Language, Sentinel
-Lateral movement?   Attacker moving between hosts
-Persistence?        Maintaining access across reboot
+KQL?                Kusto Query Language
+Lateral movement?   Movement between systems or resources after
+                    obtaining access
+Persistence?        Maintaining access across interruptions
 C2?                 Command and control
-Beaconing?          Regular interval callbacks to C2
-Dwell time?         Time between compromise and detection
+Beaconing?          Repeated communication that may occur at
+                    regular intervals
+Dwell time?         Time an adversary remains in an environment
+                    before detection or removal
+```
